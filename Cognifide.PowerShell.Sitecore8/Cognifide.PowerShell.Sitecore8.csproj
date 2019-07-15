@@ -97,9 +97,6 @@
     <AssemblyFiles Include="$(TargetDir)Cognifide.PowerShell*.*">
       <Visible>false</Visible>
     </AssemblyFiles>
-    <SitecoreModuleFiles Include="$(ProjectDir)sitecore modules\**\*.*">
-      <Visible>false</Visible>
-    </SitecoreModuleFiles>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Cognifide.PowerShell.Abstractions\Cognifide.PowerShell.Abstractions.csproj">
@@ -112,7 +109,6 @@
   </PropertyGroup>
   <Target Name="AfterBuild">
     <Copy SourceFiles="@(AssemblyFiles)" DestinationFolder="$(ProjectDeployPath)\bin" ContinueOnError="true" />
-    <Copy SourceFiles="@(SitecoreModuleFiles)" DestinationFolder="$(ProjectDeployPath)\sitecore modules\%(RecursiveDir)" ContinueOnError="true" />
     <Exec Command="PowerShell -NonInteractive -ExecutionPolicy Unrestricted -File &quot;$(ScriptLocation)&quot; -ProjectFilter &quot;$(MSBuildProjectName)&quot;" />
   </Target>
 </Project>
