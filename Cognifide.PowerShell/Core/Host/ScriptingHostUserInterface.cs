@@ -194,19 +194,25 @@ namespace Cognifide.PowerShell.Core.Host
 
             if (job == null || !CheckSessionCanDoInteractiveAction(nameof(Prompt))) throw new NotImplementedException();
             var options = new object[descriptions.Count];
+
+            Dictionary<string, bool> secureOptions = new Dictionary<string, bool>();
+
             for (var i=0 ; i < descriptions.Count; i++)
             {
                 var description = descriptions[i];
-                string editor = description.ParameterTypeName.Contains("SecureString") ? "password" : "string";
+                bool isSecure = description.ParameterTypeName.Contains("SecureString");
+                string editor = isSecure ? "password" : "string";
+                var parameterName = description.Name ?? $"var{i}{editor}";
                 options[i] = new Hashtable()
                 {
                     ["Title"] = description.Name,
-                    ["Name"] = $"var{i}{editor}",
-                    ["Value"] = description.DefaultValue?.ToString()??string.Empty,
-                    ["Editor"] = description.ParameterTypeName.Contains("SecureString") ? "password" : "string"
+                    ["Name"] = parameterName,
+                    ["Value"] = description.DefaultValue?.ToString() ?? string.Empty,
+                    ["Editor"] = editor
                 };
-                    
+                secureOptions[parameterName] = isSecure;
             }
+
             job.MessageQueue.PutMessage(new ShowMultiValuePromptMessage(options, "600", "200",
                 string.IsNullOrEmpty(caption) ? "Sitecore PowerShell Extensions" : caption,
                 string.IsNullOrEmpty(message) ? " " : message, string.Empty, string.Empty, string.Empty, false,
@@ -216,7 +222,7 @@ namespace Cognifide.PowerShell.Core.Host
             return values?.Cast<Hashtable>()
                 .ToDictionary(value => value["Name"].ToString(),
                     value =>
-                        ((string) value["Name"]).Contains("password")
+                        secureOptions[value["Name"].ToString()]
                             ? PSObject.AsPSObject(ToSecureString((string) value["Value"]))
                             : PSObject.AsPSObject(value["Value"]));
         }
